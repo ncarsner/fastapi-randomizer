@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Randomizer API - Frontend</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <h1>Randomizer API</h1>
+            <div class="theme-toggle-container">
+                <label class="theme-switch">
+                    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <!-- Random Number Generator -->
+            <div class="card">
+                <h2>🎯 Random Number (1 to Max)</h2>
+                <div class="input-group">
+                    <label for="maxValue">Maximum Value:</label>
+                    <input type="number" id="maxValue" value="100" min="1">
+                </div>
+                <button onclick="getRandomNumber()">Generate Random Number</button>
+                <div id="randomResult" class="result"></div>
+            </div>
+
+            <!-- Random Number Between -->
+            <div class="card">
+                <h2>📊 Random Number Between</h2>
+                <div class="input-group">
+                    <label for="minValue">Minimum Value (1-1000):</label>
+                    <input type="number" id="minValue" value="1" min="1" max="1000">
+                </div>
+                <div class="input-group">
+                    <label for="maxValueBetween">Maximum Value (1-1000):</label>
+                    <input type="number" id="maxValueBetween" value="99" min="1" max="1000">
+                </div>
+                <button onclick="getRandomBetween()">Generate Random Number</button>
+                <div id="randomBetweenResult" class="result"></div>
+            </div>
+
+            <!-- Add Item -->
+            <div class="card">
+                <h2>➕ Add New Items</h2>
+                <div class="input-group">
+                    <label for="itemName">Item Name(s):</label>
+                    <input type="text" id="itemName" placeholder="Enter item(s), separate with commas" maxlength="500">
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin-top: -8px; margin-bottom: 12px;">Add single item or multiple items separated by commas</p>
+                <button onclick="addItem()">Add Item(s)</button>
+                <div id="addItemResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Quick Add Presets -->
+        <div class="card">
+            <h2>⚡ Quick Add Presets</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px; line-height: 1.5;">Quickly populate your list with pre-configured item sets</p>
+            <div class="preset-buttons">
+                <button onclick="addPresetList('students')">👥 Students</button>
+                <button onclick="addPresetList('phonetic')">📻 Phonetic</button>
+                <button onclick="addPresetList('fruits')">🍎 Fruits</button>
+                <button onclick="addPresetList('colors')">🎨 Colors</button>
+                <button onclick="addPresetList('planets')">🪐 Planets</button>
+                <button onclick="addPresetList('animals')">🐶 Animals</button>
+                <button onclick="addPresetList('months')">📅 Months</button>
+                <button onclick="addPresetList('weekdays')">📆 Weekdays</button>
+                <button onclick="addPresetList('states')">🗺️ US States</button>
+                <button onclick="addPresetList('languages')">💻 Languages</button>
+                <button onclick="addPresetList('zodiac')">♈ Zodiac</button>
+            </div>
+            <div id="presetResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Items Management -->
+        <div class="card">
+            <h2>📋 Items Management</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <button class="btn-pick" onclick="pickRandomItem()" style="flex: 1; margin-top: 0;">🎯 Pick Random</button>
+                <button class="btn-shuffle" onclick="getShuffledItems()" style="flex: 1; margin-top: 0;">🎲 Shuffle All</button>
+                <button class="btn-delete" onclick="emptyList()" style="flex: 1; margin-top: 0;">🗑️ Empty List</button>
+            </div>
+            <div id="randomPickResult" style="display: none;" class="result"></div>
+
+            
+            <div class="items-container">
+                <div class="items-column">
+                    <h3>Original Order</h3>
+                    <div id="itemsList" class="items-list"></div>
+                </div>
+                <div class="items-column">
+                    <h3>Shuffled Order</h3>
+                    <div id="shuffledResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const toggle = document.getElementById('themeToggle');
+            
+            if (toggle.checked) {
+                body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme on page load
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const toggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                toggle.checked = true;
+            }
+        }
+
+        // Preset lists
+        const PRESET_LISTS = {
+            students: ['Alex', 'Blake', 'Chris', 'Cameron', 'Dylan', 'Elliott', 'Flynn', 'Gene', 'Hunter', 'Ira', 'Jaime', 'Kai', 'Logan', 'Morgan', 'Nico', 'Ollie', 'Parker', 'Peyton', 'Quinn', 'Riley', 'Skyler', 'Taylor'],
+            phonetic: ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'],
+            fruits: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍑', '🥝'],
+            colors: ['🔴 Red', '🔵 Blue', '🟢 Green', '🟡 Yellow', '🟣 Purple', '🟠 Orange', '🩷 Pink', '🩵 Cyan'],
+            planets: ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'],
+            animals: ['🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐨 Koala', '🐯 Tiger', '🦁 Lion'],
+            months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            states: ['California', 'Texas', 'Florida', 'New York', 'Pennsylvania', 'Illinois', 'Ohio', 'Georgia', 'North Carolina', 'Michigan', 'Tennessee', 'Indiana', 'Missouri', 'Maryland', 'Wisconsin', 'Colorado', 'Minnesota', 'South Carolina', 'Alabama', 'Louisiana'],
+            languages: ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'TypeScript', 'Swift'],
+            zodiac: ['♈ Aries', '♉ Taurus', '♊ Gemini', '♋ Cancer', '♌ Leo', '♍ Virgo', '♎ Libra', '♏ Scorpio', '♐ Sagittarius', '♑ Capricorn', '♒ Aquarius', '♓ Pisces']
+        };
+
+        // Add preset list
+        async function addPresetList(listType) {
+            const items = PRESET_LISTS[listType];
+            const resultDiv = document.getElementById('presetResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<p style="color: #6b7280;">Adding items...</p>';
+            
+            let addedCount = 0;
+            let skippedCount = 0;
+            const errors = [];
+
+            for (const item of items) {
+                try {
+                    const response = await fetch(`${API_BASE}/items`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name: item })
+                    });
+                    
+                    if (response.ok) {
+                        addedCount++;
+                    } else {
+                        const data = await response.json();
+                        if (data.detail && data.detail.includes('already exists')) {
+                            skippedCount++;
+                        } else {
+                            errors.push(`${item}: ${data.detail}`);
+                        }
+                    }
+                } catch (error) {
+                    errors.push(`${item}: ${error.message}`);
+                }
+            }
+
+            // Show results
+            let message = '';
+            if (addedCount > 0) message += `✓ Added ${addedCount} item${addedCount > 1 ? 's' : ''}. `;
+            if (skippedCount > 0) message += `⚠️ Skipped ${skippedCount} duplicate${skippedCount > 1 ? 's' : ''}. `;
+            if (errors.length > 0) message += `❌ ${errors.length} error${errors.length > 1 ? 's' : ''}.`;
+
+            resultDiv.className = addedCount > 0 ? 'result success' : 'result error';
+            resultDiv.innerHTML = `<p>${message}</p>`;
+
+            if (addedCount > 0) {
+                loadItems();
+            }
+
+            // Hide after 3 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Random Number (1 to Max)
+        async function getRandomNumber() {
+            const maxValue = document.getElementById('maxValue').value;
+            const resultDiv = document.getElementById('randomResult');
+            
+            // Show loading state
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="processing"><div class="spinner"></div><p>Generating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/random/${maxValue}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Small delay to show animation
+                    setTimeout(() => {
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `<div class="result-number animating">${data.random_number}</div>
+                                              <div style="text-align: center; margin-top: 10px;">
+                                              Random number between 1 and ${data.max}</div>`;
+                    }, 300);
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Random Number Between
+        async function getRandomBetween() {
+            const minValue = document.getElementById('minValue').value;
+            const maxValue = document.getElementById('maxValueBetween').value;
+            const resultDiv = document.getElementById('randomBetweenResult');
+            
+            // Show loading state
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '<div class="processing"><div class="spinner"></div><p>Generating...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/random-between?min_value=${minValue}&max_value=${maxValue}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Small delay to show animation
+                    setTimeout(() => {
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `<div class="result-number animating">${data.random_number}</div>
+                                              <div style="text-align: center; margin-top: 10px;">
+                                              Random number between ${data.min} and ${data.max}</div>`;
+                    }, 300);
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Add Item(s)
+        async function addItem() {
+            const itemInput = document.getElementById('itemName').value.trim();
+            const resultDiv = document.getElementById('addItemResult');
+            
+            if (!itemInput) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter at least one item name';
+                return;
+            }
+            
+            // Split by comma and clean up each item
+            const items = itemInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
+            
+            if (items.length === 0) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter valid item names';
+                return;
+            }
+            
+            // Show processing state
+            resultDiv.className = 'result';
+            resultDiv.textContent = `Adding ${items.length} item${items.length > 1 ? 's' : ''}...`;
+            
+            let addedCount = 0;
+            let skippedCount = 0;
+            const errors = [];
+            
+            try {
+                for (const itemName of items) {
+                    if (itemName.length > 100) {
+                        errors.push(`"${itemName.substring(0, 20)}..." is too long (max 100 characters)`);
+                        continue;
+                    }
+                    
+                    try {
+                        const response = await fetch(`${API_BASE}/items`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ name: itemName })
+                        });
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            addedCount++;
+                        } else {
+                            if (data.detail && data.detail.includes('already exists')) {
+                                skippedCount++;
+                            } else {
+                                errors.push(`"${itemName}": ${data.detail}`);
+                            }
+                        }
+                    } catch (error) {
+                        errors.push(`"${itemName}": ${error.message}`);
+                    }
+                }
+                
+                // Show results
+                let message = '';
+                if (addedCount > 0) message += `✓ Added ${addedCount} item${addedCount > 1 ? 's' : ''}. `;
+                if (skippedCount > 0) message += `⚠️ Skipped ${skippedCount} duplicate${skippedCount > 1 ? 's' : ''}. `;
+                if (errors.length > 0) message += `❌ ${errors.length} error${errors.length > 1 ? 's' : ''}: ${errors.join(', ')}`;
+                
+                resultDiv.className = addedCount > 0 ? 'result success' : 'result error';
+                resultDiv.textContent = message || 'No items were added';
+                
+                if (addedCount > 0) {
+                    document.getElementById('itemName').value = '';
+                    loadItems();
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Load Items
+        async function loadItems() {
+            const itemsList = document.getElementById('itemsList');
+            
+            try {
+                const response = await fetch(`${API_BASE}/items`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.original_order.length === 0) {
+                        itemsList.innerHTML = '<div class="empty-state"><p>No items yet. Add some items above to get started!</p></div>';
+                    } else {
+                        itemsList.innerHTML = data.original_order.map(item => `
+                            <div class="item">
+                                <span><strong>${item}</strong></span>
+                                <div class="item-buttons">
+                                    <button class="btn-update" onclick="updateItem('${item}')">✏️ Edit</button>
+                                    <button class="btn-delete" onclick="deleteItem('${item}')">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                itemsList.innerHTML = `<p class="result error">Error loading items: ${error.message}</p>`;
+            }
+        }
+
+        // Update Item
+        async function updateItem(oldName) {
+            const newName = prompt(`Update item "${oldName}" to:`, oldName);
+            
+            if (!newName || newName === oldName) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/items/${encodeURIComponent(oldName)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`✓ ${data.message}`);
+                    loadItems();
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Delete Item
+        async function deleteItem(itemName) {
+            if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/items/${encodeURIComponent(itemName)}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`✓ ${data.message}`);
+                    loadItems();
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Pick Random Item
+        async function pickRandomItem() {
+            const resultDiv = document.getElementById('randomPickResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/items`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.count === 0) {
+                        resultDiv.style.display = 'block';
+                        resultDiv.className = 'result error';
+                        resultDiv.innerHTML = '<p>No items available. Add some items first!</p>';
+                    } else {
+                        // Pick a random item
+                        const randomIndex = Math.floor(Math.random() * data.original_order.length);
+                        const pickedItem = data.original_order[randomIndex];
+                        
+                        resultDiv.style.display = 'block';
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `
+                            <div class="random-pick-result animating">${pickedItem}</div>
+                            <p style="text-align: center; color: var(--text-muted);">Randomly selected from ${data.count} item${data.count > 1 ? 's' : ''}</p>
+                        `;
+                    }
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        // Get Shuffled Items
+        async function getShuffledItems() {
+            const resultDiv = document.getElementById('shuffledResult');
+            
+            // Show loading state
+            resultDiv.innerHTML = '<div class="shuffling-indicator"><div class="shuffle-spinner"></div><p>Shuffling items...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/items`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.count === 0) {
+                        resultDiv.innerHTML = '<div class="empty-state"><p>No items to shuffle yet!</p></div>';
+                    } else {
+                        // Add delay to show shuffle animation
+                        setTimeout(() => {
+                            resultDiv.innerHTML = `
+                                <div class="items-list">
+                                    ${data.randomized_order.map((item, index) => `
+                                        <div class="item shuffle-animate" style="animation-delay: ${index * 0.05}s">
+                                            <span><strong>${index + 1}. ${item}</strong></span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }, 500);
+                    }
+                } else {
+                    throw new Error(data.detail);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="result error">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Empty List - Delete all items
+        async function emptyList() {
+            try {
+                const response = await fetch(`${API_BASE}/items`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail);
+                }
+
+                if (data.original_order.length === 0) {
+                    alert('The list is already empty!');
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to delete all ${data.original_order.length} items?`)) {
+                    return;
+                }
+
+                let deletedCount = 0;
+                const errors = [];
+
+                for (const item of data.original_order) {
+                    try {
+                        const delResponse = await fetch(`${API_BASE}/items/${encodeURIComponent(item)}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (delResponse.ok) {
+                            deletedCount++;
+                        } else {
+                            const delData = await delResponse.json();
+                            errors.push(`${item}: ${delData.detail}`);
+                        }
+                    } catch (error) {
+                        errors.push(`${item}: ${error.message}`);
+                    }
+                }
+
+                if (errors.length > 0) {
+                    alert(`Deleted ${deletedCount} items, but ${errors.length} failed:\n${errors.join('\n')}`);
+                } else {
+                    alert(`✓ Successfully deleted all ${deletedCount} items!`);
+                }
+
+                loadItems();
+                document.getElementById('shuffledResult').innerHTML = '';
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Load items and theme on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            loadItems();
+        });
+    </script>
+</body>
+</html>
