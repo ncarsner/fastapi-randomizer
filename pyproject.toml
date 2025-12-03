@@ -3,7 +3,17 @@ name = "fast-api-demo"
 version = "0.1.0"
 description = "FastAPI-driven web application to generate random selections"
 readme = "README.md"
+authors = [
+    { name = "Nicholas Carsner", email = "nicholascarsner@gmail.com" }
+]
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.121.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
+    "httpx>=0.27.0",
 ]

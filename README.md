@@ -111,15 +111,23 @@ curl http://localhost:8000/items/shuffled
 ## Project Structure
 
 ```
-fast_api_demo/
+fastapi-randomizer/
 ├── main.py              # FastAPI backend application
+├── pyproject.toml       # Dependencies and dev dependencies
+├── pytest.ini           # Pytest configuration
 ├── static/
-│   └── index.html       # Frontend single-page application
-├── pyproject.toml       # Project dependencies and metadata
+│   ├── index.html       # Frontend single-page application (SPA)
+│   └── styles.css       # Styling with CSS variables
+├── tests/               # Test suite (100% coverage)
+│   ├── conftest.py      # Test fixtures and configuration
+│   ├── test_app.py      # Application and static file tests
+│   ├── test_items_endpoints.py    # Item management tests
+│   ├── test_random_endpoints.py   # Random number generation tests
+│   └── README.md        # Test documentation
 └── README.md
 ```
 
-## Technology Stack
+## 💻 Technology Stack
 
 ### Backend
 - **FastAPI** - Modern, fast web framework for building APIs
@@ -132,7 +140,36 @@ fast_api_demo/
 - **CSS Custom Properties** - Dynamic theming
 - **Fetch API** - Async HTTP requests
 
-## Development
+## 🧪 Testing
+
+The project includes a comprehensive test suite with **100% code coverage**.
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage report
+uv run pytest --cov=main --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/test_random_endpoints.py
+
+# Generate HTML coverage report
+uv run pytest --cov=main --cov-report=html
+```
+
+### Test Suite
+
+- **50 tests** covering all endpoints and functionality
+- **3 test modules**: random endpoints, items endpoints, and application tests
+- **Fixtures** for test isolation and data setup
+- **Integration tests** for complete workflows
+
+See [tests/README.md](tests/README.md) for detailed test documentation.
+
+## 🧑‍💻 Development
 
 ### Adding New Preset Lists
 
