@@ -82,10 +82,10 @@ class TestRandomBetween:
 
     def test_random_between_boundary_values(self, client):
         """Test with boundary values."""
-        response = client.get("/random-between?min_value=1&max_value=1000")
+        response = client.get("/random-between?min_value=1&max_value=1000000")
         assert response.status_code == 200
         data = response.json()
-        assert 1 <= data["random_number"] <= 1000
+        assert 1 <= data["random_number"] <= 1000000
 
     def test_random_between_partial_params(self, client):
         """Test with only min_value provided."""

@@ -21,17 +21,18 @@ A modern, full-stack web application built with FastAPI that provides random num
 ### Frontend
 - **Modern, Professional UI** with gradient accents and smooth animations
 - **Dark/Light Theme Toggle** with localStorage persistence
-- **Quick Add Presets** - 11 pre-configured lists:
-  - 👥 Students
+- **Formatted Number Display** - Numbers displayed with comma separators for readability
+- **Quick Add Presets** - 12 pre-configured lists:
+  - 👥 Names
   - 📻 Phonetic (NATO alphabet)
-  - 🍎 Fruits
+  - 🍎 Flavors
   - 🎨 Colors
   - 🪐 Planets
   - 🐶 Animals
   - 📅 Months
   - 📆 Weekdays
   - 🗺️ US States
-  - 💻 Programming Languages
+  - 🌍 World Countries <!-- - 💻 Programming Languages -->
   - ♈ Zodiac Signs
 - **Multi-item Input** - Add multiple items at once (comma-separated)
 - **Side-by-Side Views** - See original and shuffled lists simultaneously
@@ -77,8 +78,8 @@ uv run fastapi dev main.py
 ### API Endpoints
 
 #### Random Numbers
-- `GET /random/{max_value}` - Generate random number from 0 to max_value
-- `GET /random-between?min={min}&max={max}` - Generate random number in range
+- `GET /random/{max_value}` - Generate random number from 1 to max_value
+- `GET /random-between?min_value={min}&max_value={max}` - Generate random number in range (min: 1-1000000, max: 1-1000000)
 
 #### Items Management
 - `POST /items` - Create a new item
@@ -94,7 +95,10 @@ uv run fastapi dev main.py
 curl http://localhost:8000/random/100
 
 # Get random number between 50 and 100
-curl "http://localhost:8000/random-between?min=50&max=100"
+curl "http://localhost:8000/random-between?min_value=50&max_value=100"
+
+# Get random number between 1 and 10,000
+curl "http://localhost:8000/random-between?min_value=1&max_value=10000"
 
 # Add an item
 curl -X POST http://localhost:8000/items \

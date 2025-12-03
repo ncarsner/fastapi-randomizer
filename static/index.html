@@ -33,13 +33,15 @@
             <!-- Random Number Between -->
             <div class="card">
                 <h2>📊 Random Number Between</h2>
-                <div class="input-group">
-                    <label for="minValue">Minimum Value (1-1000):</label>
-                    <input type="number" id="minValue" value="1" min="1" max="1000">
-                </div>
-                <div class="input-group">
-                    <label for="maxValueBetween">Maximum Value (1-1000):</label>
-                    <input type="number" id="maxValueBetween" value="99" min="1" max="1000">
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label for="minValue">Minimum:</label>
+                        <input type="number" id="minValue" value="1" min="1" max="1000000">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label for="maxValueBetween">Maximum:</label>
+                        <input type="number" id="maxValueBetween" value="99" min="1" max="1000000">
+                    </div>
                 </div>
                 <button onclick="getRandomBetween()">Generate Random Number</button>
                 <div id="randomBetweenResult" class="result"></div>
@@ -61,19 +63,21 @@
         <!-- Quick Add Presets -->
         <div class="card">
             <h2>⚡ Quick Add Presets</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px; line-height: 1.5;">Quickly populate your list with pre-configured item sets</p>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px; line-height: 1.5;">Populate your list with pre-configured item sets</p>
             <div class="preset-buttons">
-                <button onclick="addPresetList('students')">👥 Students</button>
+                <button onclick="addPresetList('names')">👥 Names</button>
                 <button onclick="addPresetList('phonetic')">📻 Phonetic</button>
-                <button onclick="addPresetList('fruits')">🍎 Fruits</button>
+                <button onclick="addPresetList('flavors')">🍎 Flavors</button>
                 <button onclick="addPresetList('colors')">🎨 Colors</button>
                 <button onclick="addPresetList('planets')">🪐 Planets</button>
                 <button onclick="addPresetList('animals')">🐶 Animals</button>
                 <button onclick="addPresetList('months')">📅 Months</button>
                 <button onclick="addPresetList('weekdays')">📆 Weekdays</button>
                 <button onclick="addPresetList('states')">🗺️ US States</button>
-                <button onclick="addPresetList('languages')">💻 Languages</button>
+                <button onclick="addPresetList('countries')">🌍 Countries</button>
+                <!-- <button onclick="addPresetList('languages')">💻 Languages</button> -->
                 <button onclick="addPresetList('zodiac')">♈ Zodiac</button>
+                <button onclick="addPresetList('emojis')">😄 Emojis</button>
             </div>
             <div id="presetResult" class="result" style="display: none;"></div>
         </div>
@@ -132,17 +136,19 @@
 
         // Preset lists
         const PRESET_LISTS = {
-            students: ['Alex', 'Blake', 'Chris', 'Cameron', 'Dylan', 'Elliott', 'Flynn', 'Gene', 'Hunter', 'Ira', 'Jaime', 'Kai', 'Logan', 'Morgan', 'Nico', 'Ollie', 'Parker', 'Peyton', 'Quinn', 'Riley', 'Skyler', 'Taylor'],
+            names: ['Alex', 'Blake', 'Chris', 'Cameron', 'Dylan', 'Elliott', 'Flynn', 'Gene', 'Hunter', 'Ira', 'Jaime', 'Kai', 'Logan', 'Morgan', 'Nico', 'Ollie', 'Parker', 'Peyton', 'Quinn', 'Riley', 'Sam', 'Skyler', 'Taylor', 'Uriah', 'Val', 'Wyatt', 'Xi', 'Yolanda', 'Zion'],
             phonetic: ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'],
-            fruits: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍑', '🥝'],
-            colors: ['🔴 Red', '🔵 Blue', '🟢 Green', '🟡 Yellow', '🟣 Purple', '🟠 Orange', '🩷 Pink', '🩵 Cyan'],
+            flavors: ['🍎 Apple', '🍊 Orange', '🍋 Lemon', '🍌 Banana', '🍉 Watermelon', '🍇 Grape', '🍓 Strawberry', '🫐 Blueberry', '🍑 Peach', '🥝 Kiwi', '🍒 Cherry', '🥑 Avocado', '🫒 Olive'],
+            colors: ['🔴 Red', '🔵 Blue', '🟢 Green', '🟡 Yellow', '🟣 Purple', '🟠 Orange', '🩷 Pink', '🩵 Cyan', '⚫️ Black', '⚪️ White', '🌈 Rainbow'],
             planets: ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'],
             animals: ['🐶 Dog', '🐱 Cat', '🐭 Mouse', '🐹 Hamster', '🐰 Rabbit', '🦊 Fox', '🐻 Bear', '🐼 Panda', '🐨 Koala', '🐯 Tiger', '🦁 Lion'],
             months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             states: ['California', 'Texas', 'Florida', 'New York', 'Pennsylvania', 'Illinois', 'Ohio', 'Georgia', 'North Carolina', 'Michigan', 'Tennessee', 'Indiana', 'Missouri', 'Maryland', 'Wisconsin', 'Colorado', 'Minnesota', 'South Carolina', 'Alabama', 'Louisiana'],
+            countries: ['United States', 'Canada', 'Mexico', 'Brazil', 'United Kingdom', 'Germany', 'France', 'Italy', 'Spain', 'Australia', 'India', 'China', 'Japan', 'Korea'],
             languages: ['Python', 'JavaScript', 'Java', 'C++', 'C#', 'Ruby', 'Go', 'Rust', 'TypeScript', 'Swift'],
-            zodiac: ['♈ Aries', '♉ Taurus', '♊ Gemini', '♋ Cancer', '♌ Leo', '♍ Virgo', '♎ Libra', '♏ Scorpio', '♐ Sagittarius', '♑ Capricorn', '♒ Aquarius', '♓ Pisces']
+            zodiac: ['♈ Aries', '♉ Taurus', '♊ Gemini', '♋ Cancer', '♌ Leo', '♍ Virgo', '♎ Libra', '♏ Scorpio', '♐ Sagittarius', '♑ Capricorn', '♒ Aquarius', '♓ Pisces'],
+            emojis: ['😀 Grinning Face', '😂 Face with Tears of Joy', '😍 Smiling Face with Heart-Eyes', '🤔 Thinking Face', '😎 Smiling Face with Sunglasses', '😭 Loudly Crying Face', '😡 Pouting Face', '👍 Thumbs Up', '🙏 Folded Hands', '🎉 Party Popper', '👀 Eyes', '❤️ Red Heart', '🔥 Fire', '✨ Sparkles', '💯 Hundred Points', '🚀 Rocket', '⭐ Star', '💪 Flexed Biceps', '🎯 Direct Hit', '🌟 Glowing Star', '💡 Light Bulb', '🎊 Confetti Ball', '🏆 Trophy', '🎁 Wrapped Gift', '🌈 Rainbow', '😊 Smiling Face', '🤣 Rolling on the Floor Laughing', '😅 Grinning Face with Sweat', '🥰 Smiling Face with Hearts', '😘 Face Blowing a Kiss', '😜 Winking Face with Tongue', '🤗 Hugging Face', '🤩 Star-Struck', '🥳 Partying Face', '😇 Smiling Face with Halo', '🤪 Zany Face', '😴 Sleeping Face', '🤤 Drooling Face', '🙄 Face with Rolling Eyes', '😬 Grimacing Face', '🤐 Zipper-Mouth Face', '🤫 Shushing Face', '🤓 Nerd Face', '😈 Smiling Face with Horns', '👻 Ghost', '👽 Alien', '🤖 Robot', '💀 Skull', '👏 Clapping Hands', '🤝 Handshake', '✌️ Victory Hand', '🤞 Crossed Fingers', '👌 OK Hand', '✊ Raised Fist', '👊 Oncoming Fist', '🙌 Raising Hands', '💖 Sparkling Heart', '💙 Blue Heart', '💚 Green Heart', '💛 Yellow Heart', '🧡 Orange Heart', '💜 Purple Heart', '🖤 Black Heart', '🤍 White Heart', '💔 Broken Heart', '💝 Heart with Ribbon', '💘 Heart with Arrow', '☀️ Sun', '🌙 Crescent Moon', '⚡ High Voltage', '☁️ Cloud', '❄️ Snowflake', '🌸 Cherry Blossom', '🌺 Hibiscus', '🌻 Sunflower', '🌹 Rose', '🍕 Pizza', '🍔 Hamburger', '🍟 French Fries', '🌮 Taco', '🍣 Sushi', '🍩 Doughnut', '🍪 Cookie', '🎂 Birthday Cake', '🍰 Shortcake', '☕ Hot Beverage', '🍺 Beer Mug', '🎮 Video Game', '🎸 Guitar', '🎤 Microphone', '🎧 Headphone', '📱 Mobile Phone', '💻 Laptop', '⌚ Watch', '📷 Camera', '🎬 Clapper Board', '🎨 Artist Palette', '⚽ Soccer Ball', '🏀 Basketball', '🎾 Tennis', '🏈 American Football', '⚾ Baseball', '🎳 Bowling', '♠️ Spade Suit', '♥️ Heart Suit', '♦️ Diamond Suit', '♣️ Club Suit']
         };
 
         // Add preset list
@@ -201,6 +207,11 @@
             }, 3000);
         }
 
+        // Format number with commas
+        function formatNumber(num) {
+            return num.toLocaleString('en-US');
+        }
+
         // Random Number (1 to Max)
         async function getRandomNumber() {
             const maxValue = document.getElementById('maxValue').value;
@@ -218,9 +229,9 @@
                     // Small delay to show animation
                     setTimeout(() => {
                         resultDiv.className = 'result success';
-                        resultDiv.innerHTML = `<div class="result-number animating">${data.random_number}</div>
+                        resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
                                               <div style="text-align: center; margin-top: 10px;">
-                                              Random number between 1 and ${data.max}</div>`;
+                                              Random number between 1 and ${formatNumber(data.max)}</div>`;
                     }, 300);
                 } else {
                     throw new Error(data.detail);
@@ -249,9 +260,9 @@
                     // Small delay to show animation
                     setTimeout(() => {
                         resultDiv.className = 'result success';
-                        resultDiv.innerHTML = `<div class="result-number animating">${data.random_number}</div>
+                        resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
                                               <div style="text-align: center; margin-top: 10px;">
-                                              Random number between ${data.min} and ${data.max}</div>`;
+                                              Random number between ${formatNumber(data.min)} and ${formatNumber(data.max)}</div>`;
                     }, 300);
                 } else {
                     throw new Error(data.detail);

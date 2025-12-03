@@ -91,13 +91,13 @@ async def get_random_number_between(
             title="Minimum Value",
             description="The minimum random number",
             ge=1,
-            le=1000
+            le=1000000
         )] = 1,
         max_value: Annotated[int, Query(
             title="Maximum Value",
             description="The maximum random number",
             ge=1,
-            le=1000
+            le=1000000
         )] = 99
     ):
     if min_value > max_value:
