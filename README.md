@@ -24,7 +24,7 @@ A modern, full-stack web application built with FastAPI that provides random num
 - **Formatted Number Display** - Numbers displayed with comma separators for readability
 - **Quick Add Presets** - 12 pre-configured lists:
   - 👥 Names
-  - 📻 Phonetic (NATO alphabet)
+  - 📻 Phonetic (NATO) alphabet
   - 🍎 Flavors
   - 🎨 Colors
   - 🪐 Planets
@@ -34,6 +34,7 @@ A modern, full-stack web application built with FastAPI that provides random num
   - 🗺️ US States
   - 🌍 World Countries <!-- - 💻 Programming Languages -->
   - ♈ Zodiac Signs
+  - 😄 Emojis
 - **Multi-item Input** - Add multiple items at once (comma-separated)
 - **Side-by-Side Views** - See original and shuffled lists simultaneously
 - **Animated Interactions**
