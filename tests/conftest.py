@@ -1,15 +1,17 @@
 """Test configuration and fixtures."""
 import pytest
 from fastapi.testclient import TestClient
-from main import app, items_db
+from main import app, items_db, items_db_set
 
 
 @pytest.fixture(autouse=True)
 def clear_items_db():
     """Clear the items database before each test."""
     items_db.clear()
+    items_db_set.clear()
     yield
     items_db.clear()
+    items_db_set.clear()
 
 
 @pytest.fixture
@@ -28,4 +30,5 @@ def sample_items():
 def populated_db(sample_items):
     """Populate the database with sample items."""
     items_db.extend(sample_items)
+    items_db_set.update(sample_items)
     return sample_items

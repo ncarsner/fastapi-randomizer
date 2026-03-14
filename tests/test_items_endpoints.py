@@ -310,3 +310,83 @@ class TestItemsIntegration:
         
         # Verify original order is maintained
         assert data["original_order"] == sample_items
+
+
+class TestBulkItemOperations:
+    """Tests for bulk item add/delete endpoints."""
+
+    def test_bulk_add_success(self, client):
+        """Test adding multiple items in one request."""
+        response = client.post("/items/bulk", json={"names": ["Apple", "Banana", "Cherry"]})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count_added"] == 3
+        assert data["count_skipped"] == 0
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        assert items_data["original_order"] == ["Apple", "Banana", "Cherry"]
+
+    def test_bulk_add_skips_duplicates(self, client):
+        """Test that duplicate items are skipped, not rejected."""
+        client.post("/items", json={"name": "Apple"})
+        response = client.post("/items/bulk", json={"names": ["Apple", "Banana"]})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count_added"] == 1
+        assert data["count_skipped"] == 1
+        assert data["added_items"] == ["Banana"]
+        assert data["skipped_duplicates"] == ["Apple"]
+
+    def test_bulk_add_skips_whitespace_only_names(self, client):
+        """Test that whitespace-only names are normalized/validated and skipped."""
+        response = client.post(
+            "/items/bulk",
+            json={"names": ["Apple", "   ", "\t", "Banana"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        # Two valid names (Apple, Banana), two whitespace-only entries
+        assert data["count_added"] == 2
+        assert data["count_skipped"] == 2
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        # Only the non-whitespace names should be persisted, in order
+        assert items_data["original_order"] == ["Apple", "Banana"]
+
+    def test_bulk_add_rejects_too_long_name(self, client):
+        """Test that a name longer than 100 characters causes a validation error."""
+        too_long_name = "A" * 101
+        response = client.post("/items/bulk", json={"names": [too_long_name]})
+        assert response.status_code == 422
+        data = response.json()
+        # Response should include details about the validation failure
+        assert "detail" in data
+
+    def test_bulk_add_skips_duplicates_within_payload(self, client):
+        """Test that duplicates within the same payload are skipped."""
+        names = ["Apple", "Banana", "Apple", "Banana"]
+        response = client.post("/items/bulk", json={"names": names})
+        assert response.status_code == 200
+        data = response.json()
+        # First occurrence of each is added, subsequent duplicates are skipped
+        assert data["count_added"] == 2
+        assert data["count_skipped"] == 2
+        assert set(data.get("skipped_duplicates", [])) == {"Apple", "Banana"}
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        assert items_data["original_order"] == ["Apple", "Banana"]
+
+    def test_bulk_delete_success(self, client, populated_db):
+        """Test deleting all items in one request."""
+        response = client.delete("/items")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["deleted_count"] == len(populated_db)
+        assert data["remaining_items_count"] == 0
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        assert items_data["count"] == 0
