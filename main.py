@@ -146,10 +146,13 @@ async def add_items_bulk(payload: BulkItemsRequest):
     added_items: list[str] = []
     skipped_duplicates: list[str] = []
 
-    for raw_name in payload.names:
+    for index, raw_name in enumerate(payload.names):
         name = raw_name.strip()
         if not name:
-            continue
+            raise HTTPException(
+                status_code=422,
+                detail=f"Item name at index {index} is empty or whitespace"
+            )
         if len(name) > 100:
             raise HTTPException(
                 status_code=422,
