@@ -310,3 +310,42 @@ class TestItemsIntegration:
         
         # Verify original order is maintained
         assert data["original_order"] == sample_items
+
+
+class TestBulkItemOperations:
+    """Tests for bulk item add/delete endpoints."""
+
+    def test_bulk_add_success(self, client):
+        """Test adding multiple items in one request."""
+        response = client.post("/items/bulk", json={"names": ["Apple", "Banana", "Cherry"]})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count_added"] == 3
+        assert data["count_skipped"] == 0
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        assert items_data["original_order"] == ["Apple", "Banana", "Cherry"]
+
+    def test_bulk_add_skips_duplicates(self, client):
+        """Test that duplicate items are skipped, not rejected."""
+        client.post("/items", json={"name": "Apple"})
+        response = client.post("/items/bulk", json={"names": ["Apple", "Banana"]})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count_added"] == 1
+        assert data["count_skipped"] == 1
+        assert data["added_items"] == ["Banana"]
+        assert data["skipped_duplicates"] == ["Apple"]
+
+    def test_bulk_delete_success(self, client, populated_db):
+        """Test deleting all items in one request."""
+        response = client.delete("/items")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["deleted_count"] == len(populated_db)
+        assert data["remaining_items_count"] == 0
+
+        items_response = client.get("/items")
+        items_data = items_response.json()
+        assert items_data["count"] == 0
