@@ -195,7 +195,10 @@
                 }
             } catch (error) {
                 resultDiv.className = 'result error';
-                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+                resultDiv.innerHTML = '';
+                const p = document.createElement('p');
+                p.textContent = `Error: ${error.message}`;
+                resultDiv.appendChild(p);
             }
 
             // Hide after 3 seconds
