@@ -131,14 +131,25 @@ async def get_random_number_between(
 
 @app.post("/items", response_model=ItemResponse, tags=["Random Items Management"])
 async def add_item(item: Item):
-    if item.name in items_db_set:
+    name = item.name.strip()
+    if not name:
+        raise HTTPException(
+            status_code=422,
+            detail="Item name cannot be empty or whitespace"
+        )
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Item '{name[:20]}...' exceeds max length of 100"
+        )
+    if name in items_db_set:
         raise HTTPException(status_code=400, detail="Item already exists")
 
-    items_db.append(item.name)
-    items_db_set.add(item.name)
+    items_db.append(name)
+    items_db_set.add(name)
     return ItemResponse(
         message="Item added successfully",
-        item=item.name
+        item=name
     )
 
 @app.post("/items/bulk", response_model=BulkItemsAddResponse, tags=["Random Items Management"])
