@@ -143,8 +143,18 @@ async def add_item(item: Item):
 
 @app.post("/items/bulk", response_model=BulkItemsAddResponse, tags=["Random Items Management"])
 async def add_items_bulk(payload: BulkItemsRequest):
+    # First pass: validate and determine which items will be added,
+    # without mutating the underlying storage. This avoids partially
+    # applied bulk operations if a later element is invalid.
     added_items: list[str] = []
     skipped_duplicates: list[str] = []
+
+    # Track names that will be newly added in this request so we
+    # correctly treat duplicates within the same payload as duplicates,
+    # matching the behavior of the previous implementation which updated
+    # items_db_set incrementally.
+    pending_additions: list[str] = []
+    pending_additions_set: set[str] = set()
 
     for index, raw_name in enumerate(payload.names):
         name = raw_name.strip()
@@ -156,10 +166,18 @@ async def add_items_bulk(payload: BulkItemsRequest):
                 status_code=422,
                 detail=f"Item '{name[:20]}...' exceeds max length of 100"
             )
-        if name in items_db_set:
+
+        # Treat as duplicate if it already exists in the global set or
+        # has been scheduled for addition earlier in this payload.
+        if name in items_db_set or name in pending_additions_set:
             skipped_duplicates.append(name)
             continue
 
+        pending_additions.append(name)
+        pending_additions_set.add(name)
+
+    # Second pass: apply the validated additions.
+    for name in pending_additions:
         items_db.append(name)
         items_db_set.add(name)
         added_items.append(name)
