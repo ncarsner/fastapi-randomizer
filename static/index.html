@@ -342,16 +342,39 @@
                     } else {
                         itemsList.innerHTML = data.original_order.map(item => {
                             const safeItem = escapeHtml(item);
+                            const encodedItem = encodeURIComponent(item);
                             return `
                             <div class="item">
                                 <span><strong>${safeItem}</strong></span>
                                 <div class="item-buttons">
-                                    <button class="btn-update" onclick='updateItem(${JSON.stringify(item)})'>✏️ Edit</button>
-                                    <button class="btn-delete" onclick='deleteItem(${JSON.stringify(item)})'>🗑️ Delete</button>
+                                    <button class="btn-update" data-item="${encodedItem}">✏️ Edit</button>
+                                    <button class="btn-delete" data-item="${encodedItem}">🗑️ Delete</button>
                                 </div>
                             </div>
                         `;
                         }).join('');
+
+                        // Attach event listeners programmatically to avoid inline JS and injection issues
+                        const itemElements = itemsList.querySelectorAll('.item');
+                        itemElements.forEach(itemElement => {
+                            const updateButton = itemElement.querySelector('.btn-update');
+                            const deleteButton = itemElement.querySelector('.btn-delete');
+                            const encodedItemName = updateButton ? updateButton.getAttribute('data-item') : null;
+
+                            if (!encodedItemName) {
+                                return;
+                            }
+
+                            const itemName = decodeURIComponent(encodedItemName);
+
+                            if (updateButton) {
+                                updateButton.addEventListener('click', () => updateItem(itemName));
+                            }
+
+                            if (deleteButton) {
+                                deleteButton.addEventListener('click', () => deleteItem(itemName));
+                            }
+                        });
                     }
                 } else {
                     throw new Error(data.detail);
