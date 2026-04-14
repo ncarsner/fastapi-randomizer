@@ -152,6 +152,15 @@
             emojis: ['😀 Grinning Face', '😂 Face with Tears of Joy', '😍 Smiling Face with Heart-Eyes', '🤔 Thinking Face', '😎 Smiling Face with Sunglasses', '😭 Loudly Crying Face', '😡 Pouting Face', '👍 Thumbs Up', '🙏 Folded Hands', '🎉 Party Popper', '👀 Eyes', '❤️ Red Heart', '🔥 Fire', '✨ Sparkles', '💯 Hundred Points', '🚀 Rocket', '⭐ Star', '💪 Flexed Biceps', '🎯 Direct Hit', '🌟 Glowing Star', '💡 Light Bulb', '🎊 Confetti Ball', '🏆 Trophy', '🎁 Wrapped Gift', '🌈 Rainbow', '😊 Smiling Face', '🤣 Rolling on the Floor Laughing', '😅 Grinning Face with Sweat', '🥰 Smiling Face with Hearts', '😘 Face Blowing a Kiss', '😜 Winking Face with Tongue', '🤗 Hugging Face', '🤩 Star-Struck', '🥳 Partying Face', '😇 Smiling Face with Halo', '🤪 Zany Face', '😴 Sleeping Face', '🤤 Drooling Face', '🙄 Face with Rolling Eyes', '😬 Grimacing Face', '🤐 Zipper-Mouth Face', '🤫 Shushing Face', '🤓 Nerd Face', '😈 Smiling Face with Horns', '👻 Ghost', '👽 Alien', '🤖 Robot', '💀 Skull', '👏 Clapping Hands', '🤝 Handshake', '✌️ Victory Hand', '🤞 Crossed Fingers', '👌 OK Hand', '✊ Raised Fist', '👊 Oncoming Fist', '🙌 Raising Hands', '💖 Sparkling Heart', '💙 Blue Heart', '💚 Green Heart', '💛 Yellow Heart', '🧡 Orange Heart', '💜 Purple Heart', '🖤 Black Heart', '🤍 White Heart', '💔 Broken Heart', '💝 Heart with Ribbon', '💘 Heart with Arrow', '☀️ Sun', '🌙 Crescent Moon', '⚡ High Voltage', '☁️ Cloud', '❄️ Snowflake', '🌸 Cherry Blossom', '🌺 Hibiscus', '🌻 Sunflower', '🌹 Rose', '🍕 Pizza', '🍔 Hamburger', '🍟 French Fries', '🌮 Taco', '🍣 Sushi', '🍩 Doughnut', '🍪 Cookie', '🎂 Birthday Cake', '🍰 Shortcake', '☕ Hot Beverage', '🍺 Beer Mug', '🎮 Video Game', '🎸 Guitar', '🎤 Microphone', '🎧 Headphone', '📱 Mobile Phone', '💻 Laptop', '⌚ Watch', '📷 Camera', '🎬 Clapper Board', '🎨 Artist Palette', '⚽ Soccer Ball', '🏀 Basketball', '🎾 Tennis', '🏈 American Football', '⚾ Baseball', '🎳 Bowling', '♠️ Spade Suit', '♥️ Heart Suit', '♦️ Diamond Suit', '♣️ Club Suit']
         };
 
+        function escapeHtml(value) {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // Add preset list
         async function addPresetList(listType) {
             const items = PRESET_LISTS[listType];
@@ -159,47 +168,37 @@
             resultDiv.style.display = 'block';
             resultDiv.className = 'result';
             resultDiv.innerHTML = '<p style="color: #6b7280;">Adding items...</p>';
-            
-            let addedCount = 0;
-            let skippedCount = 0;
-            const errors = [];
 
-            for (const item of items) {
-                try {
-                    const response = await fetch(`${API_BASE}/items`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ name: item })
-                    });
-                    
-                    if (response.ok) {
-                        addedCount++;
-                    } else {
-                        const data = await response.json();
-                        if (data.detail && data.detail.includes('already exists')) {
-                            skippedCount++;
-                        } else {
-                            errors.push(`${item}: ${data.detail}`);
-                        }
-                    }
-                } catch (error) {
-                    errors.push(`${item}: ${error.message}`);
+            try {
+                const response = await fetch(`${API_BASE}/items/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ names: items })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Unable to add preset list');
                 }
-            }
 
-            // Show results
-            let message = '';
-            if (addedCount > 0) message += `✓ Added ${addedCount} item${addedCount > 1 ? 's' : ''}. `;
-            if (skippedCount > 0) message += `⚠️ Skipped ${skippedCount} duplicate${skippedCount > 1 ? 's' : ''}. `;
-            if (errors.length > 0) message += `❌ ${errors.length} error${errors.length > 1 ? 's' : ''}.`;
+                let message = '';
+                if (data.count_added > 0) message += `✓ Added ${data.count_added} item${data.count_added > 1 ? 's' : ''}. `;
+                if (data.count_skipped > 0) message += `⚠️ Skipped ${data.count_skipped} duplicate${data.count_skipped > 1 ? 's' : ''}.`;
 
-            resultDiv.className = addedCount > 0 ? 'result success' : 'result error';
-            resultDiv.innerHTML = `<p>${message}</p>`;
+                resultDiv.className = data.count_added > 0 ? 'result success' : 'result error';
+                resultDiv.innerHTML = `<p>${message || 'No items were added'}</p>`;
 
-            if (addedCount > 0) {
-                loadItems();
+                if (data.count_added > 0) {
+                    loadItems();
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '';
+                const p = document.createElement('p');
+                p.textContent = `Error: ${error.message}`;
+                resultDiv.appendChild(p);
             }
 
             // Hide after 3 seconds
@@ -227,13 +226,10 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Small delay to show animation
-                    setTimeout(() => {
-                        resultDiv.className = 'result success';
-                        resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
-                                              <div style="text-align: center; margin-top: 10px;">
-                                              Random number between 1 and ${formatNumber(data.max)}</div>`;
-                    }, 300);
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
+                                          <div style="text-align: center; margin-top: 10px;">
+                                          Random number between 1 and ${formatNumber(data.max)}</div>`;
                 } else {
                     throw new Error(data.detail);
                 }
@@ -258,13 +254,10 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Small delay to show animation
-                    setTimeout(() => {
-                        resultDiv.className = 'result success';
-                        resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
-                                              <div style="text-align: center; margin-top: 10px;">
-                                              Random number between ${formatNumber(data.min)} and ${formatNumber(data.max)}</div>`;
-                    }, 300);
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
+                                          <div style="text-align: center; margin-top: 10px;">
+                                          Random number between ${formatNumber(data.min)} and ${formatNumber(data.max)}</div>`;
                 } else {
                     throw new Error(data.detail);
                 }
@@ -298,51 +291,34 @@
             resultDiv.className = 'result';
             resultDiv.textContent = `Adding ${items.length} item${items.length > 1 ? 's' : ''}...`;
             
-            let addedCount = 0;
-            let skippedCount = 0;
-            const errors = [];
-            
             try {
-                for (const itemName of items) {
-                    if (itemName.length > 100) {
-                        errors.push(`"${itemName.substring(0, 20)}..." is too long (max 100 characters)`);
-                        continue;
-                    }
-                    
-                    try {
-                        const response = await fetch(`${API_BASE}/items`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ name: itemName })
-                        });
-                        const data = await response.json();
-                        
-                        if (response.ok) {
-                            addedCount++;
-                        } else {
-                            if (data.detail && data.detail.includes('already exists')) {
-                                skippedCount++;
-                            } else {
-                                errors.push(`"${itemName}": ${data.detail}`);
-                            }
-                        }
-                    } catch (error) {
-                        errors.push(`"${itemName}": ${error.message}`);
-                    }
+                const overLimit = items.find(name => name.length > 100);
+                if (overLimit) {
+                    throw new Error(`"${overLimit.substring(0, 20)}..." is too long (max 100 characters)`);
+                }
+
+                const response = await fetch(`${API_BASE}/items/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ names: items })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Unable to add items');
                 }
                 
                 // Show results
                 let message = '';
-                if (addedCount > 0) message += `✓ Added ${addedCount} item${addedCount > 1 ? 's' : ''}. `;
-                if (skippedCount > 0) message += `⚠️ Skipped ${skippedCount} duplicate${skippedCount > 1 ? 's' : ''}. `;
-                if (errors.length > 0) message += `❌ ${errors.length} error${errors.length > 1 ? 's' : ''}: ${errors.join(', ')}`;
+                if (data.count_added > 0) message += `✓ Added ${data.count_added} item${data.count_added > 1 ? 's' : ''}. `;
+                if (data.count_skipped > 0) message += `⚠️ Skipped ${data.count_skipped} duplicate${data.count_skipped > 1 ? 's' : ''}. `;
                 
-                resultDiv.className = addedCount > 0 ? 'result success' : 'result error';
+                resultDiv.className = data.count_added > 0 ? 'result success' : 'result error';
                 resultDiv.textContent = message || 'No items were added';
                 
-                if (addedCount > 0) {
+                if (data.count_added > 0) {
                     document.getElementById('itemName').value = '';
                     loadItems();
                 }
@@ -364,15 +340,41 @@
                     if (data.original_order.length === 0) {
                         itemsList.innerHTML = '<div class="empty-state"><p>No items yet. Add some items above to get started!</p></div>';
                     } else {
-                        itemsList.innerHTML = data.original_order.map(item => `
+                        itemsList.innerHTML = data.original_order.map(item => {
+                            const safeItem = escapeHtml(item);
+                            const encodedItem = encodeURIComponent(item);
+                            return `
                             <div class="item">
-                                <span><strong>${item}</strong></span>
+                                <span><strong>${safeItem}</strong></span>
                                 <div class="item-buttons">
-                                    <button class="btn-update" onclick="updateItem('${item}')">✏️ Edit</button>
-                                    <button class="btn-delete" onclick="deleteItem('${item}')">🗑️ Delete</button>
+                                    <button class="btn-update" data-item="${encodedItem}">✏️ Edit</button>
+                                    <button class="btn-delete" data-item="${encodedItem}">🗑️ Delete</button>
                                 </div>
                             </div>
-                        `).join('');
+                        `;
+                        }).join('');
+
+                        // Attach event listeners programmatically to avoid inline JS and injection issues
+                        const itemElements = itemsList.querySelectorAll('.item');
+                        itemElements.forEach(itemElement => {
+                            const updateButton = itemElement.querySelector('.btn-update');
+                            const deleteButton = itemElement.querySelector('.btn-delete');
+                            const encodedItemName = updateButton ? updateButton.getAttribute('data-item') : null;
+
+                            if (!encodedItemName) {
+                                return;
+                            }
+
+                            const itemName = decodeURIComponent(encodedItemName);
+
+                            if (updateButton) {
+                                updateButton.addEventListener('click', () => updateItem(itemName));
+                            }
+
+                            if (deleteButton) {
+                                deleteButton.addEventListener('click', () => deleteItem(itemName));
+                            }
+                        });
                     }
                 } else {
                     throw new Error(data.detail);
@@ -480,18 +482,15 @@
                     if (data.count === 0) {
                         resultDiv.innerHTML = '<div class="empty-state"><p>No items to shuffle yet!</p></div>';
                     } else {
-                        // Add delay to show shuffle animation
-                        setTimeout(() => {
-                            resultDiv.innerHTML = `
-                                <div class="items-list">
-                                    ${data.randomized_order.map((item, index) => `
-                                        <div class="item shuffle-animate" style="animation-delay: ${index * 0.05}s">
-                                            <span><strong>${index + 1}. ${item}</strong></span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `;
-                        }, 500);
+                        resultDiv.innerHTML = `
+                            <div class="items-list">
+                                ${data.randomized_order.map((item, index) => `
+                                    <div class="item shuffle-animate" style="animation-delay: ${index * 0.05}s">
+                                        <span><strong>${index + 1}. ${escapeHtml(item)}</strong></span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                     }
                 } else {
                     throw new Error(data.detail);
@@ -520,31 +519,16 @@
                     return;
                 }
 
-                let deletedCount = 0;
-                const errors = [];
+                const deleteResponse = await fetch(`${API_BASE}/items`, {
+                    method: 'DELETE'
+                });
+                const deleteData = await deleteResponse.json();
 
-                for (const item of data.original_order) {
-                    try {
-                        const delResponse = await fetch(`${API_BASE}/items/${encodeURIComponent(item)}`, {
-                            method: 'DELETE'
-                        });
-                        
-                        if (delResponse.ok) {
-                            deletedCount++;
-                        } else {
-                            const delData = await delResponse.json();
-                            errors.push(`${item}: ${delData.detail}`);
-                        }
-                    } catch (error) {
-                        errors.push(`${item}: ${error.message}`);
-                    }
+                if (!deleteResponse.ok) {
+                    throw new Error(deleteData.detail || 'Unable to clear list');
                 }
 
-                if (errors.length > 0) {
-                    alert(`Deleted ${deletedCount} items, but ${errors.length} failed:\n${errors.join('\n')}`);
-                } else {
-                    alert(`✓ Successfully deleted all ${deletedCount} items!`);
-                }
+                alert(`✓ Successfully deleted all ${deleteData.deleted_count} items!`);
 
                 loadItems();
                 document.getElementById('shuffledResult').innerHTML = '';
