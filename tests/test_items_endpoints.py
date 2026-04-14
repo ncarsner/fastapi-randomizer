@@ -34,6 +34,13 @@ class TestAddItem:
         response = client.post("/items", json={"name": ""})
         assert response.status_code == 422  # Validation error
 
+    def test_add_item_whitespace_only_name(self, client):
+        """Test adding an item with whitespace-only name."""
+        response = client.post("/items", json={"name": "   "})
+        assert response.status_code == 422
+        data = response.json()
+        assert "empty or whitespace" in data["detail"]
+
     def test_add_item_long_name(self, client):
         """Test adding an item with name exceeding max length."""
         long_name = "A" * 101

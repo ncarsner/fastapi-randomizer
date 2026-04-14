@@ -137,11 +137,6 @@ async def add_item(item: Item):
             status_code=422,
             detail="Item name cannot be empty or whitespace"
         )
-    if len(name) > 100:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Item '{name[:20]}...' exceeds max length of 100"
-        )
     if name in items_db_set:
         raise HTTPException(status_code=400, detail="Item already exists")
 
@@ -159,6 +154,7 @@ async def add_items_bulk(payload: BulkItemsRequest):
     # applied bulk operations if a later element is invalid.
     added_items: list[str] = []
     skipped_duplicates: list[str] = []
+    skipped_whitespace_count: int = 0
 
     # Track names that will be newly added in this request so we
     # correctly treat duplicates within the same payload as duplicates,
@@ -171,6 +167,7 @@ async def add_items_bulk(payload: BulkItemsRequest):
         name = raw_name.strip()
         # Skip empty or whitespace-only names instead of rejecting the whole request
         if not name:
+            skipped_whitespace_count += 1
             continue
         if len(name) > 100:
             raise HTTPException(
@@ -198,7 +195,7 @@ async def add_items_bulk(payload: BulkItemsRequest):
         added_items=added_items,
         skipped_duplicates=skipped_duplicates,
         count_added=len(added_items),
-        count_skipped=len(skipped_duplicates),
+        count_skipped=len(skipped_duplicates) + skipped_whitespace_count,
     )
 
 @app.get("/items", response_model=ItemListResponse, tags=["Random Items Management"])
