@@ -39,7 +39,7 @@ class TestAPITags:
         """Test that random endpoints have correct tags."""
         response = client.get("/openapi.json")
         data = response.json()
-        
+
         # Check that Random Playground tag exists
         tags = [tag["name"] for tag in data.get("tags", [])]
         assert "Random Playground" in tags
@@ -49,13 +49,13 @@ class TestAPITags:
         """Test that endpoints are properly organized by tags."""
         response = client.get("/openapi.json")
         data = response.json()
-        
+
         paths = data.get("paths", {})
-        
+
         # Check random endpoints
         assert "/random/{max_value}" in paths
         assert "/random-between" in paths
-        
+
         # Check item management endpoints
         assert "/items" in paths
         assert "/items/{item}" in paths or "/items/{update_item_name}" in paths
@@ -69,7 +69,10 @@ class TestCORS:
         response = client.options("/items")
         # TestClient may not fully simulate CORS, but we can verify the middleware is configured
         # The actual CORS functionality is handled by FastAPI's CORSMiddleware
-        assert response.status_code in [200, 405]  # OPTIONS might not be explicitly defined
+        assert response.status_code in [
+            200,
+            405,
+        ]  # OPTIONS might not be explicitly defined
 
 
 class TestErrorHandling:
@@ -91,7 +94,7 @@ class TestErrorHandling:
         response = client.post(
             "/items",
             data="not valid json",
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 422
 

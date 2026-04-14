@@ -1,6 +1,8 @@
 """Test configuration and fixtures."""
+
 import pytest
 from fastapi.testclient import TestClient
+
 from main import app, items_db, items_db_set
 
 

@@ -18,7 +18,7 @@
                 </label>
             </div>
         </div>
-        
+
         <div class="grid">
             <!-- Random Number Generator -->
             <div class="card">
@@ -93,7 +93,7 @@
             </div>
             <div id="randomPickResult" style="display: none;" class="result"></div>
 
-            
+
             <div class="items-container">
                 <div class="items-column">
                     <h3>Original Order</h3>
@@ -114,7 +114,7 @@
         function toggleTheme() {
             const body = document.body;
             const toggle = document.getElementById('themeToggle');
-            
+
             if (toggle.checked) {
                 body.classList.add('dark-theme');
                 localStorage.setItem('theme', 'dark');
@@ -128,7 +128,7 @@
         function loadTheme() {
             const savedTheme = localStorage.getItem('theme');
             const toggle = document.getElementById('themeToggle');
-            
+
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-theme');
                 toggle.checked = true;
@@ -216,15 +216,15 @@
         async function getRandomNumber() {
             const maxValue = document.getElementById('maxValue').value;
             const resultDiv = document.getElementById('randomResult');
-            
+
             // Show loading state
             resultDiv.className = 'result';
             resultDiv.innerHTML = '<div class="processing"><div class="spinner"></div><p>Generating...</p></div>';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/random/${maxValue}`);
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     resultDiv.className = 'result success';
                     resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
@@ -244,15 +244,15 @@
             const minValue = document.getElementById('minValue').value;
             const maxValue = document.getElementById('maxValueBetween').value;
             const resultDiv = document.getElementById('randomBetweenResult');
-            
+
             // Show loading state
             resultDiv.className = 'result';
             resultDiv.innerHTML = '<div class="processing"><div class="spinner"></div><p>Generating...</p></div>';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/random-between?min_value=${minValue}&max_value=${maxValue}`);
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     resultDiv.className = 'result success';
                     resultDiv.innerHTML = `<div class="result-number animating">${formatNumber(data.random_number)}</div>
@@ -271,26 +271,26 @@
         async function addItem() {
             const itemInput = document.getElementById('itemName').value.trim();
             const resultDiv = document.getElementById('addItemResult');
-            
+
             if (!itemInput) {
                 resultDiv.className = 'result error';
                 resultDiv.textContent = 'Please enter at least one item name';
                 return;
             }
-            
+
             // Split by comma and clean up each item
             const items = itemInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
-            
+
             if (items.length === 0) {
                 resultDiv.className = 'result error';
                 resultDiv.textContent = 'Please enter valid item names';
                 return;
             }
-            
+
             // Show processing state
             resultDiv.className = 'result';
             resultDiv.textContent = `Adding ${items.length} item${items.length > 1 ? 's' : ''}...`;
-            
+
             try {
                 const overLimit = items.find(name => name.length > 100);
                 if (overLimit) {
@@ -309,15 +309,15 @@
                 if (!response.ok) {
                     throw new Error(data.detail || 'Unable to add items');
                 }
-                
+
                 // Show results
                 let message = '';
                 if (data.count_added > 0) message += `✓ Added ${data.count_added} item${data.count_added > 1 ? 's' : ''}. `;
                 if (data.count_skipped > 0) message += `⚠️ Skipped ${data.count_skipped} duplicate${data.count_skipped > 1 ? 's' : ''}. `;
-                
+
                 resultDiv.className = data.count_added > 0 ? 'result success' : 'result error';
                 resultDiv.textContent = message || 'No items were added';
-                
+
                 if (data.count_added > 0) {
                     document.getElementById('itemName').value = '';
                     loadItems();
@@ -331,11 +331,11 @@
         // Load Items
         async function loadItems() {
             const itemsList = document.getElementById('itemsList');
-            
+
             try {
                 const response = await fetch(`${API_BASE}/items`);
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     if (data.original_order.length === 0) {
                         itemsList.innerHTML = '<div class="empty-state"><p>No items yet. Add some items above to get started!</p></div>';
@@ -387,9 +387,9 @@
         // Update Item
         async function updateItem(oldName) {
             const newName = prompt(`Update "${oldName}" to:`, oldName);
-            
+
             if (!newName || newName === oldName) return;
-            
+
             try {
                 const response = await fetch(`${API_BASE}/items/${encodeURIComponent(oldName)}`, {
                     method: 'PUT',
@@ -399,7 +399,7 @@
                     body: JSON.stringify({ name: newName })
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     alert(`✓ ${data.message}`);
                     loadItems();
@@ -414,13 +414,13 @@
         // Delete Item
         async function deleteItem(itemName) {
             if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
-            
+
             try {
                 const response = await fetch(`${API_BASE}/items/${encodeURIComponent(itemName)}`, {
                     method: 'DELETE'
                 });
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     alert(`✓ ${data.message}`);
                     loadItems();
@@ -435,11 +435,11 @@
         // Pick Random Item
         async function pickRandomItem() {
             const resultDiv = document.getElementById('randomPickResult');
-            
+
             try {
                 const response = await fetch(`${API_BASE}/items`);
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     if (data.count === 0) {
                         resultDiv.style.display = 'block';
@@ -449,7 +449,7 @@
                         // Pick a random item
                         const randomIndex = Math.floor(Math.random() * data.original_order.length);
                         const pickedItem = data.original_order[randomIndex];
-                        
+
                         resultDiv.style.display = 'block';
                         resultDiv.className = 'result success';
                         resultDiv.innerHTML = `
@@ -470,14 +470,14 @@
         // Get Shuffled Items
         async function getShuffledItems() {
             const resultDiv = document.getElementById('shuffledResult');
-            
+
             // Show loading state
             resultDiv.innerHTML = '<div class="shuffling-indicator"><div class="shuffle-spinner"></div><p>Shuffling items...</p></div>';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/items`);
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     if (data.count === 0) {
                         resultDiv.innerHTML = '<div class="empty-state"><p>No items to shuffle yet!</p></div>';
@@ -505,7 +505,7 @@
             try {
                 const response = await fetch(`${API_BASE}/items`);
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(data.detail);
                 }
